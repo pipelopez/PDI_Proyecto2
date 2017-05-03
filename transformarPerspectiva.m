@@ -2,19 +2,50 @@ clear all;
 close all;
 clc;
 
-imagen = imread('./imagenes/leishmaniasis.jpg');%abro la imagen y la guardo en una variable
+%abro la imagen y la guardo en una variable
+ imagen = imread('./imagenes/QR2.jpg');
 imshow(imagen);%Ahora muestro la imagen.
 
-% imagen = imread('./imagenes/imagenes_calibracion/Cam0.jpg');%abro la imagen y la guardo en una variable
-% imageFileNames = {'./imagenes/imagenes_calibracion/Cam0D.jpg','./imagenes/imagenes_calibracion/Cam0.jpg','./imagenes/imagenes_calibracion/Cam1.jpg','./imagenes/imagenes_calibracion/Cam2.jpg', './imagenes/imagenes_calibracion/Cam3.jpg','./imagenes/imagenes_calibracion/Cam4.jpg','./imagenes/imagenes_calibracion/Cam5.jpg','./imagenes/imagenes_calibracion/Cam6.jpg','./imagenes/imagenes_calibracion/Cam7.jpg','./imagenes/imagenes_calibracion/Cam8.jpg','./imagenes/imagenes_calibracion/Cam9.jpg','./imagenes/imagenes_calibracion/Cam10.jpg','./imagenes/imagenes_calibracion/Cam11.jpg','./imagenes/imagenes_calibracion/Cam12.jpg','./imagenes/imagenes_calibracion/Cam13.jpg'};
-% [imagePoints,boardSize] = detectCheckerboardPoints(imageFileNames);
-% squareSize = 29;
-% worldPoints = generateCheckerboardPoints(boardSize,squareSize);
-% cameraParams = estimateCameraParameters(imagePoints,worldPoints);
+% %leemos una imágen que esté distosionada focalmente
+% imagen = imread('./imagenes/imagenes_calibracion/Cam0D.jpg');%abro la imagen y la guardo en una variable
+% %Creamos un conjunto de entrenamiento con el testigo
+% imageFileNames = {'./imagenes/imagenes_calibracion/Cam0.jpg','./imagenes/imagenes_calibracion/Cam1.jpg','./imagenes/imagenes_calibracion/Cam2.jpg', './imagenes/imagenes_calibracion/Cam3.jpg','./imagenes/imagenes_calibracion/Cam4.jpg','./imagenes/imagenes_calibracion/Cam5.jpg','./imagenes/imagenes_calibracion/Cam6.jpg','./imagenes/imagenes_calibracion/Cam7.jpg','./imagenes/imagenes_calibracion/Cam8.jpg','./imagenes/imagenes_calibracion/Cam9.jpg','./imagenes/imagenes_calibracion/Cam10.jpg','./imagenes/imagenes_calibracion/Cam11.jpg','./imagenes/imagenes_calibracion/Cam12.jpg','./imagenes/imagenes_calibracion/Cam13.jpg'};
+% 
+% 
+% % Creamos un arreglo con los puntos detectados en cada una de las imágenes
+% % del conjunto de entrenamiento
+% [imagePoints, boardSize, imagesUsed] = detectCheckerboardPoints(imageFileNames);
+% 
+% %Se almacenan los nombres de la imágenes usadas en el vector de imágenes de
+% %entrenamiento.
+% imageFileNames = imageFileNames(imagesUsed);
+% 
+% % Generate world coordinates of the corners of the squares
+% squareSize = 25;  % indicamos el tamaño de cada cuadrícula del testigo en milímetros
+% %Se generan las ubicaciones para las esquinas del testigo en cada imágen de
+% %entrenamiento
+% worldPoints = generateCheckerboardPoints(boardSize, squareSize);
+% 
+% % Se calibra la cámara con los puntos y las esquinas detectadas en el
+% % testigo para cada imágen del conjunto de entrenamiento.
+% [cameraParams, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints, worldPoints, ...
+%     'EstimateSkew', false, 'EstimateTangentialDistortion', false, ...
+%     'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'mm');
+% 
+% % Se corrige la distorsión focal de la imágen
 % J1 = undistortImage(imagen,cameraParams);
-% figure; imshowpair(imagen,J1,'montage');
-% title('Original Image (left) vs. Corrected Image (right)');
+% figure;
 % imshow(J1);%Ahora muestro la imagen.
+% 
+% %Se itera hasta que la imagen quede lo mejor posible.
+% for i=1:24
+%     imagen=J1;
+%     J1 = undistortImage(imagen,cameraParams);
+% end
+% 
+% %Se muestra la imágen.
+% figure;imshow(J1);
+%     
 
 % Capturo las coordenadas X e Y de 4 puntos seleccionados por el usuario
 [X Y] = ginput(4);
@@ -29,7 +60,8 @@ y=[1;1;297;297];
 
 % Creo una matriz de ceros en la cual voy a almacenar los nuevos valores de
 % la nueva posición de los puntos luego realizar las operaciones con los
-% coeficientes de transformación.
+% coeficientes de transformación, con esto aumentamos la resolución de la
+% imágen.
 A=zeros(8,8);
 A(1,:)=[X(1),Y(1),1,0,0,0,-1*X(1)*x(1),-1*Y(1)*x(1)];
 A(2,:)=[0,0,0,X(1),Y(1),1,-1*X(1)*y(1),-1*Y(1)*y(1)];
